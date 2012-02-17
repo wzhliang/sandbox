@@ -52,7 +52,7 @@
 
 " Default configuration {{{
 if !exists("g:sandboxhg_prefered_gui_diff")
-    let g:sandboxhg_prefered_gui_diff=['meld', 'diffuse']
+    let g:sandboxhg_prefered_gui_diff=['diffuse', 'meld']
 endif
 
 if !exists("g:sandboxhg_use_vcscommand")
@@ -116,20 +116,18 @@ for d in g:sandboxhg_prefered_gui_diff
         continue
     endif
     if executable( d )
-        echo "Found gui diffing tool: " . d
         let s:gui_diff_cmd=d
         break
     endif
 endfor
 
+if !executable('hgtk')
+    echo "It's recommended that you install tortoisehg."
+endif
+
 if s:gui_diff_cmd == ""
     echoerr "No external GUI diffing tool found."
     let g:sandboxhg_use_vcscommand = 1
-endif
-if !g:sandboxhg_use_vcscommand
-    echo "Using external."
-else
-    echo "Using commands from vcscommand.vim."
 endif
 "}}}
 
@@ -547,6 +545,21 @@ function! <SID>AnyCommand()
     endif
 endfunc
 
+"Assumption: buffer is modifiable
+function! <SID>UpdateToolSelection()
+    let ln=line('.')
+    setlocal modifiable
+    if g:sandboxhg_use_vcscommand
+        exe b:help_line_number . ",$s/ +GUI+ / GUI /g"
+        exe b:help_line_number . ",$s/ VCS / +VCS+ /g"
+    else
+        exe b:help_line_number . ",$s/ GUI / +GUI+ /g"
+        exe b:help_line_number . ",$s/ +VCS+ / VCS /g"
+    endif
+    setlocal nomodifiable
+    exe ln
+endfunc
+
 function! <SID>PrintHelp()
     setlocal modifiable
     normal Go
@@ -571,7 +584,11 @@ function! <SID>PrintHelp()
     normal o
     call setline('.', " <F5>    Refresh the buffer.")
     normal o
-    call setline('.', " <F6>    Switch between external GUI or VCS plugin.")
+    if g:sandboxhg_use_vcscommand
+        call setline('.', " <F6>    Switch between external GUI or +VCS+ plugin.")
+    else
+        call setline('.', " <F6>    Switch between external +GUI+ or VCS plugin.")
+    endif
     normal o
     call setline('.', " q       Quit")
     normal o
@@ -579,7 +596,6 @@ function! <SID>PrintHelp()
     setlocal nomodifiable
 endfunc
 
- 
 function! <SID>UpdateBuffer(first)
     if !a:first
         echo "Refreshing svn result....."
@@ -664,11 +680,10 @@ endfunc
 function! <SID>SwitchFrontEnd()
     if g:sandboxhg_use_vcscommand
         let g:sandboxhg_use_vcscommand = 0
-        echo "Switching to use external GUI tools."
     else
         let g:sandboxhg_use_vcscommand = 1
-        echo "Switching to use VCS plugin."
     endif
+    call <SID>UpdateToolSelection()
 endfunc
 
 function! <SID>Manifest()
