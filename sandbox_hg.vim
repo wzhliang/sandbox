@@ -74,6 +74,7 @@ let b:last_line = 0
 let s:supported_gui_diff=['diffuse', 'meld']
 let s:gui_diff_cmd=""
 let s:gui_log_cmd="hgtk log"
+let s:gui_blame_cmd="hgtk blame"
 let b:help_line_number=0
 
 let s:commit_prompt = "Commit message, no quotation marks (leave blank to cancel): "
@@ -566,10 +567,6 @@ function! <SID>PrintHelp()
     normal o
     call setline('.', " t       Select/Unselect a single file." )
     normal o
-    call setline('.', " u, U    Update a single file or update all files." )
-    normal o
-    call setline('.', " v       Resolved a single file or selected files.")
-    normal o
     call setline('.', " C-D     Reset selection.")
     normal o
     call setline('.', " <F5>    Refresh the buffer.")
@@ -594,12 +591,12 @@ function! <SID>UpdateBuffer(first)
     "Somehow this command will leave an empty first line in the buffer
     :silent r!hg st -q
     " The first line is always empty
-    let b:first_line = 2 
+    let b:first_line = 2
     let b:last_line = line('$')
     " when updates is on, the last line is "Status against..."
-    if g:sandboxhg_look_for_updates
-        let b:last_line -= 1
-    endif
+    "if g:sandboxhg_look_for_updates
+    "    let b:last_line -= 1
+    "endif
     normal gg
     call setline('.', 'Current sandbox: ' . g:sandboxhg_root_dir)
 
@@ -681,47 +678,29 @@ function! <SID>Manifest()
     echo "last_line: " b:last_line
     echo "gui_diff_cmd: " s:gui_diff_cmd
     echo "help_line_number: " b:help_line_number
+    let num=line('.')
+    if ! <SID>__IsStatusLine(num)
+        echo "Non status line."
+        return
+    endif
+    let fn = <SID>GetFileNameCheck(getline('.'))
+    echo "file name: " fn
 endfunc
 
 """""""""""""""""""""""""""""""""
 " MAIN
 """""""""""""""""""""""""""""""""
-if !exists(":Sandbox2")
-    command! -nargs=1 -complete=dir Sandbox2 call <SID>CreateBuffer(<q-args>)
+if !exists(":Sandhg")
+    command! -nargs=1 -complete=dir Sandhg call <SID>CreateBuffer(<q-args>)
 endif
 
 finish
 
 
 Files:
-plugin/sandbox.vim
+plugin/sandbox_hg.vim
 
 ChangLog: {{{
-Thu Jun 24 2010 Fixed tagging on very long line problem; added UpdateTagged
-Fri May 14 2010 Fixed update functionality
-Thu May 13 2010 Added mapping for ?
-Wed May 12 2010 Don't use tabe for commands. Added <F6> for switching front end.
-Mon Aug 24 2010 Minor improvement with the _Debug thing.
-Wed Jul  1 2010 Tip in status line to explain 'svn st' abbreviation. Only for the first column.
-Mon May 11 2010 Re-write GetFileNameCheck() function to work with svn 1.6.  Added support for vcscommand.vim.  Added two more GUI commands.
-Thu Jan 29 2009 Support multiple sandboxes.
-Fri Jan 16 2009 Redraw screen after GUI diff
-Tue Dec  2 2009 Added mapping for arbitary svn command execution.
-Thu Nov 27 2009 Renamed to sandbox.vim
-Wed Nov 26 2009 Fixed issue with clean snapshot
-Tue Nov 18 2009 Allow user to specify prefered gui diffing tool. 
-            Changed default map. No confusing capitalized mapping anymore, except for U.
-Fri Nov 14 2009 Fixed update. Change mapping <C-R> to <F5> because it clash with things like C-RC-f
-Thu Nov 13 2009 svn output sorted.
-Wed Nov 12 2009 Sandbox path printed at first line. Restricted command to be within actual svn output
-Tue Nov 11 2009 Overhaul or mass command. Mapping redefined.
-Wed Sep 24 2009 Changed implementation of GetFileName() so that it blindly looks for string[21:]
-Wed Sep 10 2009 Added <C-R> for refreshing the buffer
-Wed Aug 20 2009 Added support for 'A'. Added Edit command
-Sat Jul 19 2009 Fully working version.
-Thu Jul 17 2009 Removing reverted or commited line works.
-Tue Jul 15 2009 First working version without range support and hardcoded
-            startup directory.
           }}}
 
 " EoF vim:ts=4:sw=4:et:
