@@ -701,6 +701,7 @@ Files:
 plugin/sandbox_hg.vim
 
 ChangLog: {{{
+Fri Feb 17 Basic functionality working.
           }}}
 
 " EoF vim:ts=4:sw=4:et:
